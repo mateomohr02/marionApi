@@ -10,10 +10,22 @@ const globalErrorHandler = require('./controller/errorControler');
 const app = express();
 
 // 👇 Habilitar CORS para permitir requests desde el frontend
-app.use(cors({
-  origin: "http://localhost:3000" || "https://marion-client.vercel.app/", // frontend en desarrollo
-  credentials: true
-}));
+const allowedOrigins = [
+    "http://localhost:3000",
+    "https://marion-client.vercel.app"
+  ];
+  
+  app.use(cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true
+  }));
+  
 
 app.use(express.json());
 
