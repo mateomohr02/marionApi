@@ -11,7 +11,7 @@ const app = express();
 
 // 👇 Habilitar CORS para permitir requests desde el frontend
 app.use(cors({
-  origin: "http://localhost:3000" || "https://marion-client-git-main-mateomohr02s-projects.vercel.app/", // frontend en desarrollo
+  origin: "http://localhost:3000" || "https://marion-client.vercel.app/", // frontend en desarrollo
   credentials: true
 }));
 
