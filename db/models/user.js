@@ -29,4 +29,12 @@ const User = sequelize.define('user', {
   modelName: 'user'
 });
 
+// Relaciones
+User.associate = (models) => {
+  User.hasMany(models.Reply, {
+    foreignKey: 'userId',
+    as: 'replies'
+  });
+};
+
 module.exports = User;
