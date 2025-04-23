@@ -1,5 +1,30 @@
 const Post = require('../db/models/post');
 
+const getAllPosts = async (req, res) => {
+  const limit = parseInt(req.query.limit) || 10;
+  const offset = parseInt(req.query.offset) || 0;
+
+  try {
+    const Posts = await Post.findAll({
+      limit,
+      offset,
+      order: [['createdAt', 'DESC']]
+    });
+
+    return res.status(200).json({
+      status: 'success',
+      data: Posts
+    });
+  } catch (error) {
+    console.error('Error al obtener las publicaciones:', error);
+    return res.status(500).json({
+      status: 'error',
+      message: 'Error al obtener publicaciones.'
+    });
+  }
+};
+
+
 // Crear una publicación
 const addPost = async (req, res) => {
   try {
@@ -95,6 +120,7 @@ const deletePost = async (req, res) => {
 };
 
 module.exports = {
+  getAllPosts,
   addPost,
   updatePost,
   deletePost

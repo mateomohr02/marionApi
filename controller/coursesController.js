@@ -27,8 +27,6 @@ const getCourses = async (req, res) => {
     try {
         const courses = await Course.findAll()
 
-        console.log(courses, 'Listado de Cursos');
-
         res.status(200).json(courses)
         
     } catch (error) {
