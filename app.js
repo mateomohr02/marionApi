@@ -2,10 +2,12 @@ require('dotenv').config({ path: `${process.cwd()}/.env` })
 const catchAsync = require('./utils/catchAsync')
 const express = require('express');
 const cors = require('cors'); // 👈 importar cors
-const authRouter = require('./route/authRoute');
-const courseRoute = require('./route/courseRoute');
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controller/errorControler');
+const courseRoute = require('./route/courseRoute');
+const authRouter = require('./route/authRoute');
+const blogRoute = require('./route/blogRoute');
+
 
 const app = express();
 
@@ -40,6 +42,10 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRouter);
 
 app.use('/api/courses', courseRoute)
+
+
+app.use('/api/blog', blogRoute);
+
 
 app.use('*', catchAsync(async (req, res, next) => {
     throw new AppError("Error3", 404);

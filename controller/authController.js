@@ -97,19 +97,10 @@ const authentication = catchAsync(async (req, res, next) => {
         return next(new AppError('Please login to get access', 401));
     }
 
-    console.log(idToken, 'TOKEN RECIBIDO POR HEADER.');
-    
-
     //Validar el token
     const tokenDetail = jwt.verify(idToken, process.env.JWT_SECRET_KEY)
 
-    console.log(tokenDetail, "OBJETO DEVUELTO POR LA VALIDACIÓN.");
-    
-
     const freshUser = await user.findByPk(tokenDetail.id);
-
-    console.log(freshUser, 'USUARIO ENCONATRADO.');
-    
 
     if (!freshUser) {
         return next(new AppError('User not validated. Please login again.', 401))
