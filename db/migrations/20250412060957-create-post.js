@@ -13,8 +13,10 @@ module.exports = {
         type: Sequelize.STRING
       },
       content: {
-        type: Sequelize.TEXT
-      },
+        type: Sequelize.JSONB, // ✅ solo JSONB
+        allowNull: false,
+        defaultValue: []
+      },      
       videoUrl: {
         type: Sequelize.STRING
       },
@@ -34,11 +36,13 @@ module.exports = {
       },
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.fn('NOW')
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.fn('NOW')
       }
     });
   },

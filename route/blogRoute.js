@@ -1,10 +1,19 @@
 const { authentication, restrictTo } = require('../controller/authController.js');
-const { addPost, updatePost, deletePost, getAllPosts } = require('../controller/blogController.js');
+const {
+  addPost,
+  updatePost,
+  deletePost,
+  getAllPosts,
+  getPostById
+} = require('../controller/blogController.js');
 
 const router = require('express').Router();
 
-//Obtener todas las publicaciones
-router.get('/get-all-posts', authentication, getAllPosts)
+// Obtener todas las publicaciones
+router.get('/get-all-posts', authentication, getAllPosts);
+
+// Obtener una sola publicación por ID
+router.get('/get-post/:id', authentication, getPostById);
 
 // Crear una publicación (requiere estar autenticado)
 router.post('/add-post', authentication, restrictTo('0'), addPost);

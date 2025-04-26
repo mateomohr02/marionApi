@@ -1,5 +1,6 @@
 const Post = require('../db/models/post');
 
+// Obtener todas las publicaciones
 const getAllPosts = async (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   const offset = parseInt(req.query.offset) || 0;
@@ -24,18 +25,42 @@ const getAllPosts = async (req, res) => {
   }
 };
 
+// Obtener una publicación por ID
+const getPostById = async (req, res) => {
+  try {
+    const postId = req.params.id;
+
+    const post = await Post.findByPk(postId);
+
+    if (!post) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Publicación no encontrada'
+      });
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      data: post
+    });
+  } catch (error) {
+    console.error('Error al obtener la publicación:', error);
+    return res.status(500).json({
+      status: 'error',
+      message: 'Error al obtener la publicación'
+    });
+  }
+};
 
 // Crear una publicación
 const addPost = async (req, res) => {
   try {
-    const { title, content, videoUrl, imageUrls } = req.body;
+    const { title, content } = req.body;
     const userId = req.user.id;
 
     const newPost = await Post.create({
       title,
       content,
-      videoUrl,
-      imageUrls,
       userId
     });
 
@@ -67,12 +92,10 @@ const updatePost = async (req, res) => {
       });
     }
 
-    const { title, content, videoUrl, imageUrls } = req.body;
+    const { title, content } = req.body;
 
     post.title = title ?? post.title;
     post.content = content ?? post.content;
-    post.videoUrl = videoUrl ?? post.videoUrl;
-    post.imageUrls = imageUrls ?? post.imageUrls;
 
     await post.save();
 
@@ -121,6 +144,7 @@ const deletePost = async (req, res) => {
 
 module.exports = {
   getAllPosts,
+  getPostById,
   addPost,
   updatePost,
   deletePost

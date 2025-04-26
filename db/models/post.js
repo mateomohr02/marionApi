@@ -10,10 +10,9 @@ const Post = sequelize.define('post', {
     type: DataTypes.INTEGER
   },
   title: DataTypes.STRING,
-  content: DataTypes.TEXT,
-  videoUrl: DataTypes.STRING,
-  imageUrls: {
-    type: DataTypes.ARRAY(DataTypes.STRING),
+  content: {
+    type: DataTypes.JSONB, // contenido versátil
+    allowNull: false,
     defaultValue: []
   },
   userId: {
@@ -46,3 +45,5 @@ Post.associate = (models) => {
 };
 
 module.exports = Post;
+
+

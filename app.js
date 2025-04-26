@@ -43,9 +43,7 @@ app.use('/api/auth', authRouter);
 
 app.use('/api/courses', courseRoute)
 
-
 app.use('/api/blog', blogRoute);
-
 
 app.use('*', catchAsync(async (req, res, next) => {
     throw new AppError("Error3", 404);
