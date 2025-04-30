@@ -4,7 +4,9 @@ const {
   updatePost,
   deletePost,
   getAllPosts,
-  getPostById
+  getPostById,
+  getPostComments,
+  addComment
 } = require('../controller/blogController.js');
 
 const router = require('express').Router();
@@ -15,11 +17,17 @@ router.get('/get-all-posts', authentication, getAllPosts);
 // Obtener una sola publicación por ID
 router.get('/get-post/:id', authentication, getPostById);
 
+//Obtener comentarios
+router.get('/get-post-comments/:id', authentication, getPostComments)
+
 // Crear una publicación (requiere estar autenticado)
 router.post('/add-post', authentication, restrictTo('0'), addPost);
 
 // Modificar una publicación (requiere estar autenticado y ser el dueño)
 router.put('/update-post/:id', authentication, updatePost);
+
+//Añadir comentario
+router.post('/add-comment/:id', authentication, addComment);
 
 // Eliminar una publicación (requiere estar autenticado y ser el dueño)
 router.delete('/delete-post/:id', authentication, deletePost);

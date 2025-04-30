@@ -1,4 +1,6 @@
 const Post = require('../db/models/post');
+const Reply = require('../db/models/reply');
+
 
 // Obtener todas las publicaciones
 const getAllPosts = async (req, res) => {
@@ -51,6 +53,65 @@ const getPostById = async (req, res) => {
     });
   }
 };
+
+const addComment = async ( req, res ) => {
+  try {
+    const postId = req.params.id;
+    const author = req.user.id;
+    const {content, parentId} = req.body;
+
+    console.log('POST ID', postId,'Author', author, 'contenido', content, 'parentId', parentId);
+    
+
+    const response = await Reply.create({
+      postId,
+      userId: author,
+      content,
+      parentId
+    })
+
+    if (!response) {
+      res.status(300).json({
+        status: "error",
+        message:"Algo sucedió al querer añadir el comentario."
+      })
+    }
+
+    res.status(200).json({
+      status: "success",
+    })
+
+  } catch (error) {
+    res.status(400).json({
+      status: "error",
+      message: `Error al añadir el comentario, ${error.message}`
+    })
+  }
+}
+
+const getPostComments = async(req, res) => {
+  try {
+    const parentId = req.params.id;
+
+    const comments = await Reply.findAll({where: { postId: parentId }});
+
+    if (comments == 0) {
+      res.status(300).json({
+        message:"No hay comentarios para la publicación."
+      })
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: comments
+    })
+  } catch (error) {
+    res.status(400).json({
+      status:error,
+      message:`Error al obtener los comentarios ${error.message}`
+    })
+  }
+}
 
 // Crear una publicación
 const addPost = async (req, res) => {
@@ -147,5 +208,7 @@ module.exports = {
   getPostById,
   addPost,
   updatePost,
-  deletePost
+  deletePost,
+  getPostComments,
+  addComment
 };
