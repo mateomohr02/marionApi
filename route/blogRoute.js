@@ -11,16 +11,16 @@ const {
 const router = require('express').Router();
 
 // Obtener todas las publicaciones
-router.get('/get-all-posts', authentication, getAllPosts);
+router.get('/get-all-posts', getAllPosts);
 
 // Obtener una sola publicación por ID
-router.get('/get-post/:id', authentication, getPostById);
+router.get('/get-post/:id', getPostById);
 
 // Crear una publicación (requiere estar autenticado)
 router.post('/add-post', authentication, restrictTo('0'), addPost);
 
 // Modificar una publicación (requiere estar autenticado y ser el dueño)
-router.put('/update-post/:id', authentication, updatePost);
+router.put('/update-post/:id', authentication, restrictTo('0'), updatePost);
 
 //Añadir comentario
 router.post('/add-comment/:id', authentication, addComment);

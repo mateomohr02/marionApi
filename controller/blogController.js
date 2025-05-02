@@ -168,6 +168,9 @@ const addComment = async (req, res) => {
     const author = req.user.id;
     const { content, parentId } = req.body;
 
+    console.log(postId,author,content, parentId, 'ESTO RECIBE EL CONTROLLER');
+    
+
     const response = await Reply.create({
       postId,
       userId: author,
