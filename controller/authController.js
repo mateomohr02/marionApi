@@ -1,128 +1,130 @@
-const user = require("../db/models/user")
-const jwt = require('jsonwebtoken')
-const catchAsync = require('../utils/catchAsync')
+const db = require('../db/models');
+const { User: User } = db;
+const jwt = require('jsonwebtoken');
+const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError');  // Suponiendo que tienes un archivo de manejo de errores
 
 const generateToken = (payload) => {
-    return jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-        expiresIn: process.env.JWT_EXPIRES_IN
-    })
-}
+  return jwt.sign(payload, process.env.JWT_SECRET_KEY, {
+    expiresIn: process.env.JWT_EXPIRES_IN
+  });
+};
 
 const signUp = async (req, res, next) => {
+  const body = req.body;
 
-    const body = req.body;
-
-    console.log(body, 'Esto es lo que llega al controller');
-    
-
-    const newUser = await user.create({
-        name:body.name,
-        email:body.email,
-        password:body.password
-    })
+  try {
+    const newUser = await User.create({
+      name: body.name,
+      email: body.email,
+      password: body.password
+    });
 
     const result = newUser.toJSON();
-
     delete result.password;
 
-
     result.token = generateToken({
-        id: result.id,
-    })
+      id: result.id,
+    });
 
-
-    if(!result) {
-        return res.status(400).json({
-            status: 'error',
-            message: 'Fail to create the user'
-        })
+    if (!result) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Fail to create the user'
+      });
     }
 
     return res.status(201).json({
-        status: 'success',
-        data: result
+      status: 'success',
+      data: result
     });
+
+  } catch (error) {
+    next(error);
+  }
 };
 
 const login = async (req, res, next) => {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    if (!email || !password) {
-        return res.status(400).json({
-            status: 'fail',
-            message: 'Please provide email and password'
-        })
-    }
+  if (!email || !password) {
+    return res.status(400).json({
+      status: 'fail',
+      message: 'Please provide email and password'
+    });
+  }
 
-    const result = await user.findOne({where: {email}})
+  try {
+    const result = await User.findOne({ where: { email } });
 
     if (!result) {
-        return res.status(401).json({
-            status:'fail',
-            message: 'Incorrect Email'
-        })
+      return res.status(401).json({
+        status: 'fail',
+        message: 'Incorrect Email'
+      });
     }
 
-    const passwordMatch = password === result.password ? true : false;
+    const passwordMatch = password === result.password;
 
     if (!passwordMatch) {
-        return res.status(401).json({
-            status:'fail',
-            message: 'Incorrect Password'
-        })
+      return res.status(401).json({
+        status: 'fail',
+        message: 'Incorrect Password'
+      });
     }
 
     const token = generateToken({
-        id: result.id,
-    })
+      id: result.id,
+    });
 
-    const userFound = {id: result.id, name: result.name, userType:result.userType, email: result.email}
-
+    const userFound = {
+      id: result.id,
+      name: result.name,
+      userType: result.userType,
+      email: result.email
+    };
 
     return res.status(200).json({
-        status: 'success',
-        data: {token:token, userData:userFound}
-    })
-}
+      status: 'success',
+      data: { token, userData: userFound }
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
 
 const authentication = catchAsync(async (req, res, next) => {
+  let idToken = '';
 
-    //Recibir el token del header
-    let idToken = '';
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    idToken = req.headers.authorization.split(' ')[1];
+  }
 
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-        idToken = req.headers.authorization.split(' ')[1];
-    }
-    if (!idToken) {
-        return next(new AppError('Please login to get access', 401));
-    }
+  if (!idToken) {
+    return next(new AppError('Please login to get access', 401));
+  }
 
-    //Validar el token
-    const tokenDetail = jwt.verify(idToken, process.env.JWT_SECRET_KEY)
+  const tokenDetail = jwt.verify(idToken, process.env.JWT_SECRET_KEY);
+  const freshUser = await User.findByPk(tokenDetail.id);
 
-    const freshUser = await user.findByPk(tokenDetail.id);
+  if (!freshUser) {
+    return next(new AppError('User not validated. Please login again.', 401));
+  }
 
-    if (!freshUser) {
-        return next(new AppError('User not validated. Please login again.', 401))
-    }
-
-    req.user = freshUser;
-
-    return next();
-    
-})
+  req.user = freshUser;
+  return next();
+});
 
 const restrictTo = (...userType) => {
-    const checkPermission = (req,res, next) => {
-        if (!userType.includes(req.user.userType)) {
-            return next(
-                new AppError("You dont have perimission to pergorm this action", 403)
-            );
-        }
-        return next();
+  return (req, res, next) => {
+    if (!userType.includes(req.user.userType)) {
+      return next(
+        new AppError("You don't have permission to perform this action", 403)
+      );
     }
-return checkPermission;
-}
+    return next();
+  };
+};
 
-
-module.exports = {signUp, login, authentication, restrictTo}
+module.exports = { signUp, login, authentication, restrictTo };

@@ -23,8 +23,7 @@ fs
     return (
       file.indexOf('.') !== 0 &&
       file !== basename &&
-      file.slice(-3) === '.js' &&
-      file.indexOf('.test.js') === -1
+      file.slice(-3) === '.js'
     );
   })
   .forEach(file => {
@@ -32,41 +31,20 @@ fs
     db[model.name] = model;
   });
 
-// Ejecutar asociaciones si están definidas en los modelos
-Object.keys(db).forEach(modelName => {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
-  }
-});
+// Relaciones entre modelos
+db.User.hasMany(db.Post, { foreignKey: 'userId', onDelete: 'CASCADE' });
+db.Post.belongsTo(db.User, { foreignKey: 'userId' });
 
-// Relaciones manuales
-const { user, course, lesson, post, reply } = db;
+db.User.hasMany(db.Reply, { foreignKey: 'userId', onDelete: 'CASCADE'  });
+db.Reply.belongsTo(db.User, { foreignKey: 'userId' });
 
-// user <-> course (muchos a muchos)
-user.belongsToMany(course, { through: 'user_courses', foreignKey: 'userId' });
-course.belongsToMany(user, { through: 'user_courses', foreignKey: 'courseId' });
+db.Post.hasMany(db.Reply, { foreignKey: 'postId', onDelete: 'CASCADE'  });
+db.Reply.belongsTo(db.Post, { foreignKey: 'postId' });
 
-// course -> lesson (uno a muchos)
-course.hasMany(lesson, { foreignKey: 'courseId', as: 'lessons' });
-lesson.belongsTo(course, { foreignKey: 'courseId', as: 'course' });
+db.Reply.hasMany(db.Reply, { as: 'Replies', foreignKey: 'parentId', onDelete: 'CASCADE'  });
+db.Reply.belongsTo(db.Reply, { as: 'Parent', foreignKey: 'parentId' });
 
-// user -> post (uno a muchos)
-user.hasMany(post, { foreignKey: 'userId', as: 'posts' });
-post.belongsTo(user, { foreignKey: 'userId', as: 'author' });
 
-// user -> reply (uno a muchos)
-user.hasMany(reply, { foreignKey: 'userId', as: 'replies' });
-reply.belongsTo(user, { foreignKey: 'userId', as: 'user' });
-
-// post -> reply (uno a muchos)
-post.hasMany(reply, { foreignKey: 'postId', as: 'replies' });
-reply.belongsTo(post, { foreignKey: 'postId', as: 'post' });
-
-// reply -> reply (respuestas anidadas)
-reply.hasMany(reply, { foreignKey: 'parentId', as: 'replies' });
-reply.belongsTo(reply, { foreignKey: 'parentId', as: 'parent' });
-
-db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
 module.exports = db;

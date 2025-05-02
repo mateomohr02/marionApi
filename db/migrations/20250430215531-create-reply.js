@@ -1,8 +1,8 @@
 'use strict';
 
 module.exports = {
-  async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('reply', {
+  up: async (queryInterface, Sequelize) => {
+    await queryInterface.createTable('Replies', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -17,46 +17,42 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'user',
+          model: 'Users',
           key: 'id'
         },
-        onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       },
       postId: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'post',
+          model: 'Posts',
           key: 'id'
         },
-        onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       },
       parentId: {
         type: Sequelize.INTEGER,
         allowNull: true,
         references: {
-          model: 'reply',
+          model: 'Replies',
           key: 'id'
         },
-        onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       },
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE,
-        defaultValue: Sequelize.fn('NOW')
+        type: Sequelize.DATE
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE,
-        defaultValue: Sequelize.fn('NOW')
+        type: Sequelize.DATE
       }
     });
   },
 
-  async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('reply');
+  down: async (queryInterface) => {
+    await queryInterface.dropTable('Replies');
   }
 };
+

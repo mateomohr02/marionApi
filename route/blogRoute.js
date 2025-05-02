@@ -5,7 +5,6 @@ const {
   deletePost,
   getAllPosts,
   getPostById,
-  getPostComments,
   addComment
 } = require('../controller/blogController.js');
 
@@ -16,9 +15,6 @@ router.get('/get-all-posts', authentication, getAllPosts);
 
 // Obtener una sola publicación por ID
 router.get('/get-post/:id', authentication, getPostById);
-
-//Obtener comentarios
-router.get('/get-post-comments/:id', authentication, getPostComments)
 
 // Crear una publicación (requiere estar autenticado)
 router.post('/add-post', authentication, restrictTo('0'), addPost);
