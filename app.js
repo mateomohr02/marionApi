@@ -7,16 +7,19 @@ const globalErrorHandler = require('./controller/errorControler');
 const courseRoute = require('./route/courseRoute');
 const authRouter = require('./route/authRoute');
 const blogRoute = require('./route/blogRoute');
-
+const paymentRoute = require('./route/paymentRoute.js');
+const morgan = require('morgan');
 
 const app = express();
 
 // 👇 Habilitar CORS para permitir requests desde el frontend
 const allowedOrigins = [
     "http://localhost:3000",
-    "https://marion-client.vercel.app"
+    "https://marion-client-dev.vercel.app"
   ];
-  
+
+  app.use(morgan('dev'))
+
   app.use(cors({
     origin: function (origin, callback) {
       if (!origin || allowedOrigins.includes(origin)) {
@@ -28,7 +31,6 @@ const allowedOrigins = [
     credentials: true
   }));
   
-
 app.use(express.json());
 
 app.get('/', (req, res) => {
@@ -44,6 +46,8 @@ app.use('/api/auth', authRouter);
 app.use('/api/courses', courseRoute)
 
 app.use('/api/blog', blogRoute);
+
+app.use('/api/payment', paymentRoute);
 
 app.use('*', catchAsync(async (req, res, next) => {
     throw new AppError("Error3", 404);
