@@ -8,6 +8,8 @@ const courseRoute = require('./route/courseRoute');
 const authRouter = require('./route/authRoute');
 const blogRoute = require('./route/blogRoute');
 const paymentRoute = require('./route/paymentRoute.js');
+const lessonRoute = require('./route/lessonRoute.js')
+
 const morgan = require('morgan');
 
 const app = express();
@@ -48,6 +50,8 @@ app.use('/api/courses', courseRoute)
 app.use('/api/blog', blogRoute);
 
 app.use('/api/payment', paymentRoute);
+
+app.use('/api/lessons', lessonRoute);
 
 app.use('*', catchAsync(async (req, res, next) => {
     throw new AppError("Error3", 404);

@@ -47,6 +47,9 @@ db.Reply.belongsTo(db.Reply, { as: 'Parent', foreignKey: 'parentId' });
 db.User.belongsToMany(db.Course, { through: 'UserCourse', foreignKey: 'userId', otherKey: 'courseId' });
 db.Course.belongsToMany(db.User, { through: 'UserCourse', foreignKey: 'courseId', otherKey: 'userId' });
 
+db.Course.hasMany(db.Lesson, { foreignKey: 'courseId', onDelete: 'CASCADE' });
+db.Lesson.belongsTo(db.Course, { foreignKey: 'courseId' });
+
 db.Sequelize = Sequelize;
 
 module.exports = db;

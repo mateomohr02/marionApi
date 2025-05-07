@@ -11,11 +11,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
       },
       title: DataTypes.STRING,
-      content: DataTypes.TEXT,
-      videoUrl: DataTypes.STRING,
-      imageUrls: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
-        defaultValue: [],
+      content: {
+        type: DataTypes.JSONB,
+        allowNull: false,
+        defaultValue: []
       },
       courseId: {
         type: DataTypes.INTEGER,
@@ -24,19 +23,10 @@ module.exports = (sequelize, DataTypes) => {
           key: "id",
         },
         allowNull: false,
-      },
-      createdAt: {
-        allowNull: false,
-        type: DataTypes.DATE,
-      },
-      updatedAt: {
-        allowNull: false,
-        type: DataTypes.DATE,
-      },
+      }
     },
-    {
-      freezeTableName: true,
-      modelName: "lesson",
+    { 
+      timestamps: false
     }
   );
   return Lesson;
