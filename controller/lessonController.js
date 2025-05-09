@@ -5,20 +5,32 @@ const getCourseLessons = async (req, res) => {
   const { courseId } = req.params;
 
   try {
-    const lessons = await Lesson.findAll({
-      where: { courseId },
-      order: [['id', 'ASC']],
+    const course = await Course.findByPk(courseId, {
+      attributes: ["id", "name"],
     });
 
+    const lessons = await Lesson.findAll({
+      where: { courseId },
+      order: [["id", "ASC"]],
+    });
+
+    if (lessons.length === 0) {
+      return res.status(404).json({
+        status: "error",
+        message: "No se encontraron lecciones para este curso",
+      });
+    }
+
     res.status(200).json({
-      status: 'success',
+      status: "success",
+      course, // está en la primera lección
       data: lessons,
     });
   } catch (error) {
-    console.error('Error al obtener las lecciones:', error);
+    console.error("Error al obtener las lecciones:", error);
     res.status(500).json({
-      status: 'error',
-      message: 'Error al obtener las lecciones',
+      status: "error",
+      message: "Error al obtener las lecciones",
     });
   }
 };
@@ -30,14 +42,14 @@ const postLesson = async (req, res) => {
     const newLesson = await Lesson.create(lesson);
 
     res.status(201).json({
-      status: 'success',
+      status: "success",
       data: newLesson,
     });
   } catch (error) {
-    console.error('Error al crear la lección:', error);
+    console.error("Error al crear la lección:", error);
     res.status(500).json({
-      status: 'error',
-      message: 'Error al crear la lección',
+      status: "error",
+      message: "Error al crear la lección",
     });
   }
 };
@@ -50,20 +62,20 @@ const deleteLesson = async (req, res) => {
 
     if (!deleted) {
       return res.status(404).json({
-        status: 'error',
-        message: 'Lección no encontrada',
+        status: "error",
+        message: "Lección no encontrada",
       });
     }
 
     res.status(200).json({
-      status: 'success',
-      message: 'Lección eliminada correctamente',
+      status: "success",
+      message: "Lección eliminada correctamente",
     });
   } catch (error) {
-    console.error('Error al eliminar la lección:', error);
+    console.error("Error al eliminar la lección:", error);
     res.status(500).json({
-      status: 'error',
-      message: 'Error al eliminar la lección',
+      status: "error",
+      message: "Error al eliminar la lección",
     });
   }
 };
@@ -77,22 +89,22 @@ const updateLesson = async (req, res) => {
 
     if (!updated) {
       return res.status(404).json({
-        status: 'error',
-        message: 'Lección no encontrada',
+        status: "error",
+        message: "Lección no encontrada",
       });
     }
 
     const updatedLesson = await Lesson.findByPk(lessonId);
 
     res.status(200).json({
-      status: 'success',
+      status: "success",
       data: updatedLesson,
     });
   } catch (error) {
-    console.error('Error al actualizar la lección:', error);
+    console.error("Error al actualizar la lección:", error);
     res.status(500).json({
-      status: 'error',
-      message: 'Error al actualizar la lección',
+      status: "error",
+      message: "Error al actualizar la lección",
     });
   }
 };
