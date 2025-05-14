@@ -8,6 +8,9 @@ const getAllPosts = async (req, res) => {
 
   try {
     const posts = await Post.findAll({
+      where: {
+        courseId: null, // Solo publicaciones generales
+      },
       limit,
       offset,
       order: [["createdAt", "DESC"]],
@@ -25,6 +28,7 @@ const getAllPosts = async (req, res) => {
     });
   }
 };
+
 
 // Obtener una publicación por ID
 const getPostById = async (req, res) => {

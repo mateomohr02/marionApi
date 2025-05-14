@@ -1,5 +1,5 @@
 const db = require("../db/models");
-const { Course: Course, User: User } = db;
+const { Course: Course, User: User, Reply: Reply, Post: Post } = db;
 
 const getUserCourses = async (req, res) => {
   const { id } = req.user;
@@ -102,4 +102,104 @@ const addUserToCourse = async (req, res) => {
   }
 };
 
-module.exports = { getCourses, addCourse, getUserCourses, addUserToCourse };
+const addPostToCourseForum = async (req, res) => {
+
+    try {
+    const { id } = req.params
+    const { title, content } = req.body;
+    const userId = req.user.id;
+
+    const newPost = await Post.create({
+      title,
+      content,
+      courseId: id,
+      userId,
+    });
+
+    return res.status(201).json({
+      status: "success",
+      data: newPost,
+    });
+  } catch (error) {
+    console.error("Error al crear la publicación:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Error al crear la publicación",
+    });
+  }
+}
+
+const getCourseForumPosts = async (req, res) => {
+  const { id } = req.params
+  const limit = parseInt(req.query.limit) || 10;
+  const offset = parseInt(req.query.offset) || 0;
+
+  try {
+    const posts = await Post.findAll({
+      where: {
+        courseId:id, // Solo publicaciones generales
+      },
+      limit,
+      offset,
+      order: [["createdAt", "DESC"]],
+    });
+
+    return res.status(200).json({
+      status: "success",
+      data: posts,
+    });
+  } catch (error) {
+    console.error("Error al obtener las publicaciones:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Error al obtener publicaciones.",
+    });
+  }
+}
+
+const getForumPostDetail = async (req, res) => {
+
+  try {
+    const {postId} = req.params;
+
+    const post = await Post.findByPk(postId, {
+      include: [
+        {
+          model: Reply,
+          include: [
+            {
+              model: User, // opcional: incluir el usuario que escribió la respuesta
+              attributes: ['name'] // o los campos que quieras exponer
+            },
+            {
+              model: Reply, // incluir respuestas anidadas
+              as: 'Replies',
+              include: [{ model: User, attributes: ['name'] }],
+            }
+          ]
+        }
+      ]
+    });
+
+    if (!post) {
+      return res.status(404).json({
+        status: "error",
+        message: "Publicación no encontrada",
+      });
+    }
+
+    return res.status(200).json({
+      status: "success",
+      data: post,
+    });
+  } catch (error) {
+    console.error("Error al obtener la publicación:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Error al obtener la publicación",
+    });
+  }
+
+}
+
+module.exports = { getCourses, addCourse, getUserCourses, addUserToCourse, addPostToCourseForum, getCourseForumPosts, getForumPostDetail };
