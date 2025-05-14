@@ -15,9 +15,9 @@ const getCourseLessons = async (req, res) => {
     });
 
     if (lessons.length === 0) {
-      return res.status(404).json({
-        status: "error",
-        message: "No se encontraron lecciones para este curso",
+      return res.status(200).json({
+        status: "success",
+        data: [],
       });
     }
 

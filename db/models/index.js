@@ -50,6 +50,10 @@ db.Course.belongsToMany(db.User, { through: 'UserCourse', foreignKey: 'courseId'
 db.Course.hasMany(db.Lesson, { foreignKey: 'courseId', onDelete: 'CASCADE' });
 db.Lesson.belongsTo(db.Course, { foreignKey: 'courseId' });
 
+db.Course.hasMany(db.Post, { foreignKey: 'courseId', onDelete: 'CASCADE' });
+db.Post.belongsTo(db.Course, { foreignKey: 'courseId' });
+
+
 db.Sequelize = Sequelize;
 
 module.exports = db;

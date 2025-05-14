@@ -37,6 +37,9 @@ const getCourses = async (req, res) => {
 const addCourse = async (req, res) => {
   const body = req.body;
 
+  console.log(body, 'DATA CONTROLLER');
+  
+
   try {
     const newCourse = await Course.create({
       name: body.name,
