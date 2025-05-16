@@ -11,16 +11,9 @@ module.exports = (sequelize, DataTypes) => {
     name: DataTypes.STRING,
     price: DataTypes.FLOAT,
     description: DataTypes.TEXT,
-    introVideoUrl: DataTypes.STRING,
-    createdAt: {
-      allowNull: false,
-      type: DataTypes.DATE
-    },
-    updatedAt: {
-      allowNull: false,
-      type: DataTypes.DATE
-    }
+    content: DataTypes.JSON, // contenido de la clase introductoria gratuita
   }, {
+    timestamps: false // Desactiva createdAt y updatedAt
   });
 
   return Course;

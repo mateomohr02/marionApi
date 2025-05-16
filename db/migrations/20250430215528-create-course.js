@@ -12,15 +12,7 @@ module.exports = {
       name: Sequelize.STRING,
       price: Sequelize.FLOAT,
       description: Sequelize.TEXT,
-      introVideoUrl: Sequelize.STRING,
-      createdAt: {
-        allowNull: false,
-        type: Sequelize.DATE
-      },
-      updatedAt: {
-        allowNull: false,
-        type: Sequelize.DATE
-      }
+      content: Sequelize.JSON // Nuevo campo para la clase introductoria gratuita
     });
   },
 
