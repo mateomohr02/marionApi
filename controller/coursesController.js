@@ -37,15 +37,14 @@ const getCourses = async (req, res) => {
 const addCourse = async (req, res) => {
   const body = req.body;
 
-  console.log(body, 'DATA CONTROLLER');
-  
 
   try {
     const newCourse = await Course.create({
       name: body.name,
       price: body.price,
       description: body.description,
-      introVideoUrl: body.introVideoUrl,
+      poster:body.poster,
+      content: body.content,
     });
 
     const result = newCourse.toJSON();

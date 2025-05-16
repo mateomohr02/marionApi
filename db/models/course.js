@@ -8,10 +8,26 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.INTEGER
     },
-    name: DataTypes.STRING,
-    price: DataTypes.FLOAT,
-    description: DataTypes.TEXT,
-    content: DataTypes.JSON, // contenido de la clase introductoria gratuita
+    name:{
+      allowNull: false,
+      type: DataTypes.STRING
+    },
+    price:{
+      allowNull: false,
+      type: DataTypes.FLOAT
+    },
+    description:{
+      allowNull: false,
+      type: DataTypes.TEXT
+    },
+    poster:{
+      allowNull: false,
+      type: DataTypes.TEXT
+    },
+    content:{
+      allowNull: false,
+      type: DataTypes.JSON
+    }, // contenido de la clase introductoria gratuita
   }, {
     timestamps: false // Desactiva createdAt y updatedAt
   });

@@ -9,10 +9,26 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      name: Sequelize.STRING,
-      price: Sequelize.FLOAT,
-      description: Sequelize.TEXT,
-      content: Sequelize.JSON // Nuevo campo para la clase introductoria gratuita
+      name: {
+        allowNull: false,
+        type: Sequelize.STRING
+      },
+      price: {
+        allowNull: false,
+        type: Sequelize.FLOAT
+      },
+      description: {
+        allowNull: false,
+        type: Sequelize.TEXT
+      },
+      poster: {
+        allowNull: false,
+        type: Sequelize.TEXT
+      },
+      content: {
+        allowNull: false,
+        type: Sequelize.JSON
+      }
     });
   },
 
@@ -20,3 +36,4 @@ module.exports = {
     await queryInterface.dropTable('Courses');
   }
 };
+
