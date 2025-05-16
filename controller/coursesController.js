@@ -139,6 +139,12 @@ const getCourseForumPosts = async (req, res) => {
       where: {
         courseId:id, // Solo publicaciones generales
       },
+      include: [
+        {
+          model: User,
+          attributes: ["id", "name"], // solo devolvés el id y nombre del usuario
+        },
+      ],
       limit,
       offset,
       order: [["createdAt", "DESC"]],
@@ -164,6 +170,10 @@ const getForumPostDetail = async (req, res) => {
 
     const post = await Post.findByPk(postId, {
       include: [
+        {
+          model: User,
+          attributes: ["id", "name"], // solo devolvés el id y nombre del usuario
+        },
         {
           model: Reply,
           include: [
