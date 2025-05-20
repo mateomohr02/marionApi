@@ -172,8 +172,7 @@ const addComment = async (req, res) => {
     const author = req.user.id;
     const { content, parentId } = req.body;
 
-    console.log(postId,author,content, parentId, 'ESTO RECIBE EL CONTROLLER');
-    
+    console.log(postId, author, content, parentId, 'ESTO RECIBE EL CONTROLLER');
 
     const response = await Reply.create({
       postId,
@@ -183,22 +182,40 @@ const addComment = async (req, res) => {
     });
 
     if (!response) {
-      return res.status(300).json({
+      return res.status(400).json({
         status: "error",
         message: "Algo sucedió al querer añadir el comentario.",
       });
     }
 
+    // Buscar el comentario recién creado incluyendo el autor y posibles respuestas hijas
+    const newReply = await Reply.findByPk(response.id, {
+      include: [
+        {
+          model: User,
+          attributes: ['name'],
+        },
+        {
+          model: Reply,
+          as: 'Replies', // alias definido en las asociaciones
+          include: [{ model: User, attributes: ['name'] }],
+        },
+      ],
+    });
+
     res.status(200).json({
       status: "success",
+      data: newReply,
     });
   } catch (error) {
+    console.error("Error al añadir el comentario:", error);
     res.status(400).json({
       status: "error",
       message: `Error al añadir el comentario, ${error.message}`,
     });
   }
 };
+
 
 module.exports = {
   getAllPosts,
