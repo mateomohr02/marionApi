@@ -24,6 +24,29 @@ const getUserCourses = async (req, res) => {
   }
 };
 
+const getCourseByName = async (req, res) => {
+  try {
+    const courseName = req.query.name;
+
+    if (!courseName) {
+      return res.status(400).json({ message: "El nombre del curso es requerido" });
+    }
+
+    const course = await Course.findOne({
+      where: { name: courseName },
+    });
+
+    if (!course) {
+      return res.status(404).json({ message: "Curso no encontrado" });
+    }
+
+    return res.status(200).json({ course });
+  } catch (error) {
+    console.error("Error al obtener el curso:", error);
+    return res.status(500).json({ message: "Error interno del servidor" });
+  }
+};
+
 const getCourses = async (req, res) => {
   try {
     const courses = await Course.findAll();
@@ -211,4 +234,4 @@ const getForumPostDetail = async (req, res) => {
 
 }
 
-module.exports = { getCourses, addCourse, getUserCourses, addUserToCourse, addPostToCourseForum, getCourseForumPosts, getForumPostDetail };
+module.exports = { getCourses, getCourseByName, addCourse, getUserCourses, addUserToCourse, addPostToCourseForum, getCourseForumPosts, getForumPostDetail };
