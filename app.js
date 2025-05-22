@@ -7,8 +7,8 @@ const globalErrorHandler = require('./controller/errorControler');
 const courseRoute = require('./route/courseRoute');
 const authRouter = require('./route/authRoute');
 const blogRoute = require('./route/blogRoute');
-const paymentRoute = require('./route/paymentRoute.js');
 const lessonRoute = require('./route/lessonRoute.js')
+const mpRoute = require('./route/mpRoute.js')
 
 const morgan = require('morgan');
 
@@ -49,9 +49,9 @@ app.use('/api/courses', courseRoute)
 
 app.use('/api/blog', blogRoute);
 
-app.use('/api/payment', paymentRoute);
-
 app.use('/api/lessons', lessonRoute);
+
+app.use('/api/mercado-pago', mpRoute)
 
 app.use('*', catchAsync(async (req, res, next) => {
     throw new AppError("Error3", 404);
