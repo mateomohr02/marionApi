@@ -14,6 +14,8 @@ const handlePreference = async (req, res) => {
 
     const preference = new Preference(client);
 
+
+    
     const successUrl = `${process.env.NEXT_BASE_URL_DEV}/success`;
     const failureUrl = `${process.env.NEXT_BASE_URL_DEV}/failure`;
     const pendingUrl = `${process.env.NEXT_BASE_URL_DEV}/pending`;
