@@ -39,6 +39,7 @@ const handlePreference = async (req, res) => {
         },
         notification_url: webhookUrl,
         auto_return: "approved",
+        sandbox_mode: true,
         payment_methods: {
           excluded_payment_types: [{ id: "ticket" }, { id: "bank_transfer" }],
           installments: 1,
