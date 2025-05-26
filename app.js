@@ -17,7 +17,7 @@ const app = express();
 // 👇 Habilitar CORS para permitir requests desde el frontend
 const allowedOrigins = [
     "http://localhost:3000",
-    "https://marion-client-dev.vercel.app"
+    "https://marion-client.vercel.app"
   ];
 
   app.use(morgan('dev'))
