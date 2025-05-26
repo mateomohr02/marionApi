@@ -1,5 +1,6 @@
 const db = require("../db/models");
 const { Course: Course, User: User, Reply: Reply, Post: Post } = db;
+const { Op, fn, col, where, literal } = require("sequelize");
 
 const getUserCourses = async (req, res) => {
   const { id } = req.user;
@@ -33,7 +34,7 @@ const getCourseByName = async (req, res) => {
     }
 
     const course = await Course.findOne({
-      where: { name: courseName },
+      where: where(fn('LOWER', col('name')), courseName.toLowerCase()),
     });
 
     if (!course) {
