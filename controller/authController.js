@@ -11,28 +11,42 @@ const generateToken = (payload) => {
 };
 
 const signUp = async (req, res, next) => {
-  const body = req.body;
+  const { name, email, password } = req.body;
 
   try {
-    const newUser = await User.create({
-      name: body.name,
-      email: body.email,
-      password: body.password
-    });
+    // Validaciones básicas
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Name, email and password are required'
+      });
+    }
+
+    // Validación básica de formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid email format'
+      });
+    }
+
+    // Verificar que no exista un usuario con el mismo email
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return res.status(409).json({
+        status: 'error',
+        message: 'Email already in use'
+      });
+    }
+
+    // Crear el nuevo usuario
+    const newUser = await User.create({ name, email, password });
 
     const result = newUser.toJSON();
     delete result.password;
 
-    result.token = generateToken({
-      id: result.id,
-    });
-
-    if (!result) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Fail to create the user'
-      });
-    }
+    result.token = generateToken({ id: result.id });
 
     return res.status(201).json({
       status: 'success',
