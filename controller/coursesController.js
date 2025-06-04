@@ -59,15 +59,16 @@ const getCourses = async (req, res) => {
 };
 
 const addCourse = async (req, res) => {
+  const userId = req.user.id;
   const body = req.body;
 
-
   try {
+    // 1. Crear el curso
     const newCourse = await Course.create({
       name: body.name,
       price: body.price,
       description: body.description,
-      poster:body.poster,
+      poster: body.poster,
       content: body.content,
     });
 
@@ -80,6 +81,16 @@ const addCourse = async (req, res) => {
       });
     }
 
+    // 2. Buscar el curso recién creado
+    const course = await Course.findByPk(result.id);
+
+    // 3. Buscar todos los administradores
+    const admins = await User.findAll({ where: { userType: '0' } });
+
+    // 4. Asociar el curso a todos los administradores en paralelo
+    await Promise.all(admins.map((admin) => admin.addCourse(course)));
+
+    // 5. Respuesta exitosa
     return res.status(201).json({
       status: "success",
       data: result,
@@ -93,14 +104,11 @@ const addCourse = async (req, res) => {
   }
 };
 
+
+
 const addUserToCourse = async (req, res) => {
   const userId = req.user.id;
   const courseId = req.params.id;
-
-  console.log(req.user, 'REQ.USER');
-  console.log(req.params, 'REQ PARAMS');
-  
-  
 
   try {
     // Verificar que el curso exista

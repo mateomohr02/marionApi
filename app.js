@@ -8,6 +8,7 @@ const courseRoute = require('./route/courseRoute');
 const authRouter = require('./route/authRoute');
 const blogRoute = require('./route/blogRoute');
 const lessonRoute = require('./route/lessonRoute.js')
+const userRoute = require('./route/userRoute.js')
 const mpRoute = require('./route/mpRoute.js')
 
 const morgan = require('morgan');
@@ -50,6 +51,8 @@ app.use('/api/courses', courseRoute)
 app.use('/api/blog', blogRoute);
 
 app.use('/api/lessons', lessonRoute);
+
+app.use('/api/users', userRoute);
 
 app.use('/api/mercado-pago', mpRoute)
 
