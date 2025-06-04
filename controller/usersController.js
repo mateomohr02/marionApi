@@ -8,7 +8,7 @@ const getAllUsers = async (req, res) => {
 
   try {
     const { count, rows: users } = await User.findAndCountAll({
-      attributes: ['id','email', 'name'],
+      attributes: ['id','email', 'name', 'userType'],
       include: [
         {
           model: Course,
@@ -106,10 +106,47 @@ const getUserActivity = async (req, res) => {
   }
 };
 
+const syncAdminsWithCourses = async (req, res) => {
+  try {
+    const allCourses = await Course.findAll({ attributes: ['id'] });
+    const adminUsers = await User.findAll({
+      where: { userType: '0' },
+      include: {
+        model: Course,
+        attributes: ['id'],
+        through: { attributes: [] },
+      },
+    });
+
+    for (const admin of adminUsers) {
+      const adminCourseIds = admin.Courses.map((c) => c.id);
+      const missingCourses = allCourses.filter(
+        (course) => !adminCourseIds.includes(course.id)
+      );
+
+      if (missingCourses.length > 0) {
+        await admin.addCourses(missingCourses);
+      }
+    }
+
+    return res.status(200).json({
+      status: "success",
+      message: "Sincronización completada: todos los administradores ahora tienen acceso a todos los cursos.",
+    });
+  } catch (error) {
+    console.error("Error al sincronizar administradores con cursos:", error);
+    return res.status(500).json({
+      status: "failure",
+      message: "Error al sincronizar administradores con cursos.",
+    });
+  }
+};
+
 
 module.exports = {
   getAllUsers,
   deleteUser,
   getUserActivity,
+  syncAdminsWithCourses,
 };
 
