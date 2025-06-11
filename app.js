@@ -11,6 +11,8 @@ const lessonRoute = require('./route/lessonRoute.js');
 const userRoute = require('./route/userRoute.js');
 const mpRoute = require('./route/mpRoute.js');
 const stripeRoute = require('./route/stripeRoute');
+const cloudinaryRoute = require('./route/cloudinaryRoute');
+
 
 const morgan = require('morgan');
 
@@ -57,6 +59,7 @@ app.use('/api/blog', blogRoute);
 app.use('/api/lessons', lessonRoute);
 app.use('/api/users', userRoute);
 app.use('/api/mercado-pago', mpRoute);
+app.use('/api/cloudinary', cloudinaryRoute);
 
 // Usar las rutas Stripe (excepto webhook que ya está arriba)
 app.use('/api/stripe', stripeRoute);
