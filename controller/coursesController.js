@@ -1,6 +1,6 @@
 const db = require("../db/models");
-const { Course: Course, User: User, Reply: Reply, Post: Post } = db;
-const { Op, fn, col, where, literal } = require("sequelize");
+const { Course, User, Reply, Post } = db;
+const { Op, fn, col, where, literal, json } = require("sequelize");
 
 const getUserCourses = async (req, res) => {
   const { id } = req.user;
@@ -9,8 +9,8 @@ const getUserCourses = async (req, res) => {
     const foundUser = await User.findByPk(id, {
       include: {
         model: Course,
-        through: { attributes: [] }, // Oculta la tabla intermedia
-        as: "Courses", // Asegurate de que este alias coincide con tu relación en models/index.js
+        through: { attributes: [] },
+        as: "Courses",
       },
     });
 
@@ -18,7 +18,7 @@ const getUserCourses = async (req, res) => {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
-    res.json(foundUser.Courses); // O "foundUser.get('Courses')" si querés más flexibilidad
+    res.json(foundUser.Courses);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error al obtener cursos del usuario" });
@@ -28,13 +28,17 @@ const getUserCourses = async (req, res) => {
 const getCourseByName = async (req, res) => {
   try {
     const courseName = req.query.name;
+    const lang = req.query.lang || "es"; // por defecto en español
 
     if (!courseName) {
       return res.status(400).json({ message: "El nombre del curso es requerido" });
     }
 
     const course = await Course.findOne({
-      where: where(fn('LOWER', col('name')), courseName.toLowerCase()),
+      where: where(
+        fn("LOWER", json(`name.${lang}`)),
+        courseName.toLowerCase()
+      ),
     });
 
     if (!course) {
@@ -63,13 +67,12 @@ const addCourse = async (req, res) => {
   const body = req.body;
 
   try {
-    // 1. Crear el curso
     const newCourse = await Course.create({
-      name: body.name,
-      price: body.price,
-      description: body.description,
-      poster: body.poster,
-      content: body.content,
+      name: body.name, // { es: "", de: "" }
+      price: body.price, // { ars: 0, eur: 0 }
+      description: body.description, // { es: "", de: "" }
+      poster: body.poster, // { es: "", de: "" }
+      content: body.content, // { es: [], de: [] }
     });
 
     const result = newCourse.toJSON();
@@ -77,20 +80,15 @@ const addCourse = async (req, res) => {
     if (!result) {
       return res.status(400).json({
         status: "error",
-        message: "Fail to create the course",
+        message: "Fallo al crear el curso",
       });
     }
 
-    // 2. Buscar el curso recién creado
     const course = await Course.findByPk(result.id);
-
-    // 3. Buscar todos los administradores
     const admins = await User.findAll({ where: { userType: '0' } });
 
-    // 4. Asociar el curso a todos los administradores en paralelo
     await Promise.all(admins.map((admin) => admin.addCourse(course)));
 
-    // 5. Respuesta exitosa
     return res.status(201).json({
       status: "success",
       data: result,
@@ -104,28 +102,22 @@ const addCourse = async (req, res) => {
   }
 };
 
-
-
 const addUserToCourse = async (req, res) => {
   const userId = req.user.id;
   const courseId = req.params.id;
 
   try {
-    // Verificar que el curso exista
     const course = await Course.findByPk(courseId);
     if (!course) {
       return res.status(404).json({ message: "Curso no encontrado" });
     }
 
-    // Obtener el usuario
     const user = await User.findByPk(userId);
     if (!user) {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
-    // Asociar el usuario al curso
-    await user.addCourse(course); // Sequelize crea este método automáticamente
-
+    await user.addCourse(course);
     res.status(200).json({ message: "Usuario añadido al curso exitosamente" });
   } catch (error) {
     console.error(error);
@@ -134,9 +126,8 @@ const addUserToCourse = async (req, res) => {
 };
 
 const addPostToCourseForum = async (req, res) => {
-
-    try {
-    const { id } = req.params
+  try {
+    const { id } = req.params;
     const { title, content } = req.body;
     const userId = req.user.id;
 
@@ -158,22 +149,22 @@ const addPostToCourseForum = async (req, res) => {
       message: "Error al crear la publicación",
     });
   }
-}
+};
 
 const getCourseForumPosts = async (req, res) => {
-  const { id } = req.params
+  const { id } = req.params;
   const limit = parseInt(req.query.limit) || 10;
   const offset = parseInt(req.query.offset) || 0;
 
   try {
     const posts = await Post.findAll({
       where: {
-        courseId:id, // Solo publicaciones generales
+        courseId: id,
       },
       include: [
         {
           model: User,
-          attributes: ["id", "name"], // solo devolvés el id y nombre del usuario
+          attributes: ["id", "name"],
         },
       ],
       limit,
@@ -192,28 +183,27 @@ const getCourseForumPosts = async (req, res) => {
       message: "Error al obtener publicaciones.",
     });
   }
-}
+};
 
 const getForumPostDetail = async (req, res) => {
-
   try {
-    const {postId} = req.params;
+    const { postId } = req.params;
 
     const post = await Post.findByPk(postId, {
       include: [
         {
           model: User,
-          attributes: ["id", "name"], // solo devolvés el id y nombre del usuario
+          attributes: ["id", "name"],
         },
         {
           model: Reply,
           include: [
             {
-              model: User, // opcional: incluir el usuario que escribió la respuesta
-              attributes: ['name'] // o los campos que quieras exponer
+              model: User,
+              attributes: ['name'],
             },
             {
-              model: Reply, // incluir respuestas anidadas
+              model: Reply,
               as: 'Replies',
               include: [{ model: User, attributes: ['name'] }],
             }
@@ -240,7 +230,15 @@ const getForumPostDetail = async (req, res) => {
       message: "Error al obtener la publicación",
     });
   }
+};
 
-}
-
-module.exports = { getCourses, getCourseByName, addCourse, getUserCourses, addUserToCourse, addPostToCourseForum, getCourseForumPosts, getForumPostDetail };
+module.exports = {
+  getCourses,
+  getCourseByName,
+  addCourse,
+  getUserCourses,
+  addUserToCourse,
+  addPostToCourseForum,
+  getCourseForumPosts,
+  getForumPostDetail,
+};

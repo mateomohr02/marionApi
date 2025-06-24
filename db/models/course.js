@@ -8,30 +8,29 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.INTEGER
     },
-    name:{
+    name: {
       allowNull: false,
-      type: DataTypes.STRING
+      type: DataTypes.JSON // { es: "", de: "" }
     },
-    price:{
+    price: {
       allowNull: false,
-      type: DataTypes.FLOAT
+      type: DataTypes.JSON // { ars: 0, eur: 0 }
     },
-    description:{
+    description: {
       allowNull: false,
-      type: DataTypes.TEXT
+      type: DataTypes.JSON // { es: "", de: "" }
     },
-    poster:{
+    poster: {
       allowNull: false,
-      type: DataTypes.TEXT
+      type: DataTypes.JSON // { es: "", de: "" }
     },
-    content:{
+    content: {
       allowNull: false,
-      type: DataTypes.JSON
-    }, // contenido de la clase introductoria gratuita
+      type: DataTypes.JSON // { es: [], de: [] }
+    }
   }, {
-    timestamps: false // Desactiva createdAt y updatedAt
+    timestamps: false
   });
 
   return Course;
 };
-

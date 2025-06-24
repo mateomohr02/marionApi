@@ -1,6 +1,7 @@
 const db = require("../db/models");
-const { Course: Course, Lesson: Lesson } = db;
+const { Course, Lesson } = db;
 
+// Obtener las lecciones de un curso
 const getCourseLessons = async (req, res) => {
   const { courseId } = req.params;
 
@@ -14,16 +15,9 @@ const getCourseLessons = async (req, res) => {
       order: [["id", "ASC"]],
     });
 
-    if (lessons.length === 0) {
-      return res.status(200).json({
-        status: "success",
-        data: [],
-      });
-    }
-
     res.status(200).json({
       status: "success",
-      course, // está en la primera lección
+      course,
       data: lessons,
     });
   } catch (error) {
@@ -35,11 +29,29 @@ const getCourseLessons = async (req, res) => {
   }
 };
 
+// Crear nueva lección con contenido en español y alemán
 const postLesson = async (req, res) => {
-  const lesson = req.body;
+  const { courseId, title, content } = req.body;
+
+  // Validación mínima de estructura
+  if (
+    !courseId ||
+    !title?.es || !title?.de ||
+    !Array.isArray(content?.es) ||
+    !Array.isArray(content?.de)
+  ) {
+    return res.status(400).json({
+      status: "error",
+      message: "Faltan campos obligatorios o formato inválido",
+    });
+  }
 
   try {
-    const newLesson = await Lesson.create(lesson);
+    const newLesson = await Lesson.create({
+      courseId,
+      title,
+      content,
+    });
 
     res.status(201).json({
       status: "success",
@@ -54,6 +66,7 @@ const postLesson = async (req, res) => {
   }
 };
 
+// Eliminar lección por ID
 const deleteLesson = async (req, res) => {
   const { lessonId } = req.params;
 
@@ -80,6 +93,7 @@ const deleteLesson = async (req, res) => {
   }
 };
 
+// Actualizar lección
 const updateLesson = async (req, res) => {
   const { lessonId } = req.params;
   const updates = req.body;

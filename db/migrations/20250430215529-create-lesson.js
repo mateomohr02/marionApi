@@ -1,36 +1,43 @@
-'use strict';
+"use strict";
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('Lessons', {
+    await queryInterface.createTable("Lessons", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
       },
       title: {
-        type: Sequelize.STRING
+        type: Sequelize.JSONB,
+        allowNull: false,
+        defaultValue: {
+          es: "",
+          de: "",
+        },
       },
       content: {
         type: Sequelize.JSONB,
         allowNull: false,
-        defaultValue: []
+        defaultValue: {
+          es: [],
+          de: [],
+        },
       },
       courseId: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Courses',
-          key: 'id'
+          model: "Courses",
+          key: "id",
         },
-        onDelete: 'CASCADE'
-      }
+        onDelete: "CASCADE",
+      },
     });
   },
 
   down: async (queryInterface) => {
-    await queryInterface.dropTable('Lessons');
-  }
+    await queryInterface.dropTable("Lessons");
+  },
 };
-

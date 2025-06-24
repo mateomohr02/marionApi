@@ -11,19 +11,19 @@ module.exports = {
       },
       name: {
         allowNull: false,
-        type: Sequelize.STRING
+        type: Sequelize.JSON
       },
       price: {
         allowNull: false,
-        type: Sequelize.FLOAT
+        type: Sequelize.JSON
       },
       description: {
         allowNull: false,
-        type: Sequelize.TEXT
+        type: Sequelize.JSON
       },
       poster: {
         allowNull: false,
-        type: Sequelize.TEXT
+        type: Sequelize.JSON
       },
       content: {
         allowNull: false,
@@ -36,4 +36,3 @@ module.exports = {
     await queryInterface.dropTable('Courses');
   }
 };
-
