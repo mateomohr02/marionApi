@@ -10,6 +10,11 @@ module.exports = {
         type: Sequelize.INTEGER,
       },
       title: Sequelize.STRING,
+      slug: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        unique: true, // <- campo único
+      },
       content: {
         type: Sequelize.JSONB,
         allowNull: false,

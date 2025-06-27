@@ -12,6 +12,11 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       type: DataTypes.JSON // { es: "", de: "" }
     },
+    slug: {
+      allowNull: false,
+      type: DataTypes.STRING,
+      unique: true
+    },
     price: {
       allowNull: false,
       type: DataTypes.JSON // { ars: 0, eur: 0 }

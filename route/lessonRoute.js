@@ -12,7 +12,7 @@ const {
   const router = require("express").Router();
   
   // Obtener todas las lecciones de un curso
-  router.get("/:courseId", authentication, getCourseLessons);
+  router.get("/", authentication, getCourseLessons);
   
   // Crear una nueva lección
   router.post("/", authentication, restrictTo("0"), postLesson);

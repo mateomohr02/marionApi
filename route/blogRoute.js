@@ -4,7 +4,7 @@ const {
   updatePost,
   deletePost,
   getAllPosts,
-  getPostById,
+  getPostBySlug,
   addComment
 } = require('../controller/blogController.js');
 
@@ -14,7 +14,7 @@ const router = require('express').Router();
 router.get('/get-all-posts', getAllPosts);
 
 // Obtener una sola publicación por ID
-router.get('/get-post/:id', getPostById);
+router.get('/get-post/:slug', getPostBySlug);
 
 // Crear una publicación (requiere estar autenticado)
 router.post('/add-post', authentication, restrictTo('0'), addPost);

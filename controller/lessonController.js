@@ -1,14 +1,23 @@
 const db = require("../db/models");
 const { Course, Lesson } = db;
+const { Op, fn, col, where, literal, json } = require("sequelize");
 
 // Obtener las lecciones de un curso
 const getCourseLessons = async (req, res) => {
-  const { courseId } = req.params;
-
   try {
-    const course = await Course.findByPk(courseId, {
-      attributes: ["id", "name"],
+    const courseName = req.query.name;
+    const lang = req.query.lang || "es";
+    let courseId;
+
+    const course = await Course.findOne({
+      where: { slug: courseName },
     });
+
+    if (!course) {
+      return res.status(404).json({ message: "Curso no encontrado" });
+    }
+
+    courseId = course.id;
 
     const lessons = await Lesson.findAll({
       where: { courseId },
@@ -28,6 +37,7 @@ const getCourseLessons = async (req, res) => {
     });
   }
 };
+
 
 // Crear nueva lección con contenido en español y alemán
 const postLesson = async (req, res) => {

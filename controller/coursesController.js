@@ -1,6 +1,6 @@
 const db = require("../db/models");
 const { Course, User, Reply, Post } = db;
-const { Op, fn, col, where, literal, json } = require("sequelize");
+const slugify = require("../utils/slugify");
 
 const getUserCourses = async (req, res) => {
   const { id } = req.user;
@@ -26,19 +26,22 @@ const getUserCourses = async (req, res) => {
 };
 
 const getCourseByName = async (req, res) => {
+
+  console.log('arrives controller');
+  
+
   try {
-    const courseName = req.query.name;
-    const lang = req.query.lang || "es"; // por defecto en español
+    // Ahora el parámetro "name" realmente es el slug
+    const courseSlug = req.query.name;    
 
-    if (!courseName) {
-      return res.status(400).json({ message: "El nombre del curso es requerido" });
+    if (!courseSlug) {
+      return res
+        .status(400)
+        .json({ message: "El slug del curso es requerido" });
     }
-
+    
     const course = await Course.findOne({
-      where: where(
-        fn("LOWER", json(`name.${lang}`)),
-        courseName.toLowerCase()
-      ),
+      where: { slug: courseSlug },
     });
 
     if (!course) {
@@ -67,25 +70,30 @@ const addCourse = async (req, res) => {
   const body = req.body;
 
   try {
+    // Se genera slug desde el nombre en español
+    const slug = slugify(body.name.es);
+
+    // Validar que no exista otro curso con el mismo slug
+    const slugExists = await Course.findOne({ where: { slug } });
+    if (slugExists) {
+      return res.status(409).json({
+        message: "Ya existe un curso con ese nombre (slug duplicado).",
+      });
+    }
+
     const newCourse = await Course.create({
-      name: body.name, // { es: "", de: "" }
-      price: body.price, // { ars: 0, eur: 0 }
-      description: body.description, // { es: "", de: "" }
-      poster: body.poster, // { es: "", de: "" }
-      content: body.content, // { es: [], de: [] }
+      name: body.name,
+      slug,
+      price: body.price,
+      description: body.description,
+      poster: body.poster,
+      content: body.content,
     });
 
     const result = newCourse.toJSON();
 
-    if (!result) {
-      return res.status(400).json({
-        status: "error",
-        message: "Fallo al crear el curso",
-      });
-    }
-
     const course = await Course.findByPk(result.id);
-    const admins = await User.findAll({ where: { userType: '0' } });
+    const admins = await User.findAll({ where: { userType: "0" } });
 
     await Promise.all(admins.map((admin) => admin.addCourse(course)));
 
@@ -127,14 +135,37 @@ const addUserToCourse = async (req, res) => {
 
 const addPostToCourseForum = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { courseName } = req.params;
     const { title, content } = req.body;
     const userId = req.user.id;
 
+    if (!courseName || !title || !content) {
+      return res.status(400).json({ message: "Faltan campos requeridos." });
+    }
+
+    // Aquí courseName es el slug del curso
+    const course = await Course.findOne({ where: { slug: courseName } });
+
+    if (!course) {
+      return res.status(404).json({ message: "Curso no encontrado." });
+    }
+
+    const slug = slugify(title);
+
+    const existing = await Post.findOne({
+      where: { slug, courseId: course.id },
+    });
+    if (existing) {
+      return res
+        .status(409)
+        .json({ message: "Ya existe una publicación con ese título." });
+    }
+
     const newPost = await Post.create({
       title,
+      slug,
       content,
-      courseId: id,
+      courseId: course.id,
       userId,
     });
 
@@ -152,14 +183,27 @@ const addPostToCourseForum = async (req, res) => {
 };
 
 const getCourseForumPosts = async (req, res) => {
-  const { id } = req.params;
+  let { courseName } = req.params;
   const limit = parseInt(req.query.limit) || 10;
   const offset = parseInt(req.query.offset) || 0;
 
   try {
+    if (!courseName) {
+      return res.status(400).json({ message: "El slug del curso es requerido." });
+    }
+
+    courseName = courseName.split(" courseName")[0].trim();
+
+    // Aquí courseName es slug
+    const course = await Course.findOne({ where: { slug: courseName } });
+
+    if (!course) {
+      return res.status(404).json({ message: "Curso no encontrado." });
+    }
+
     const posts = await Post.findAll({
       where: {
-        courseId: id,
+        courseId: course.id,
       },
       include: [
         {
@@ -177,19 +221,36 @@ const getCourseForumPosts = async (req, res) => {
       data: posts,
     });
   } catch (error) {
-    console.error("Error al obtener las publicaciones:", error);
+    console.error("Error al obtener las publicaciones del foro:", error);
     return res.status(500).json({
       status: "error",
-      message: "Error al obtener publicaciones.",
+      message: "Error interno al obtener publicaciones del foro.",
     });
   }
 };
 
 const getForumPostDetail = async (req, res) => {
   try {
-    const { postId } = req.params;
+    const { postName, courseName } = req.params;
 
-    const post = await Post.findByPk(postId, {
+    if (!courseName || !postName) {
+      return res.status(400).json({ message: "Faltan parámetros requeridos." });
+    }
+
+    const formattedPostSlug = slugify(postName);
+
+    // courseName es slug
+    const course = await Course.findOne({ where: { slug: courseName } });
+
+    if (!course) {
+      return res.status(404).json({ message: "Curso no encontrado." });
+    }
+
+    const post = await Post.findOne({
+      where: {
+        courseId: course.id,
+        slug: formattedPostSlug,
+      },
       include: [
         {
           model: User,
@@ -198,18 +259,15 @@ const getForumPostDetail = async (req, res) => {
         {
           model: Reply,
           include: [
-            {
-              model: User,
-              attributes: ['name'],
-            },
+            { model: User, attributes: ["name"] },
             {
               model: Reply,
-              as: 'Replies',
-              include: [{ model: User, attributes: ['name'] }],
-            }
-          ]
-        }
-      ]
+              as: "Replies",
+              include: [{ model: User, attributes: ["name"] }],
+            },
+          ],
+        },
+      ],
     });
 
     if (!post) {

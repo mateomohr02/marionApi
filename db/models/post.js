@@ -11,6 +11,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
       },
       title: DataTypes.STRING,
+       slug: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+      },
       content: {
         type: DataTypes.JSONB,
         allowNull: false,

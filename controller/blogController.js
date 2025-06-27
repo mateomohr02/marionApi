@@ -1,5 +1,6 @@
 const db = require("../db/models");
 const { User: User, Reply: Reply, Post: Post } = db;
+const slugify = require("../utils/slugify");
 
 // Obtener todas las publicaciones
 const getAllPosts = async (req, res) => {
@@ -31,25 +32,40 @@ const getAllPosts = async (req, res) => {
 
 
 // Obtener una publicación por ID
-const getPostById = async (req, res) => {
+const getPostBySlug = async (req, res) => {
   try {
-    const postId = req.params.id;
+    const slug = req.params.slug;
 
-    const post = await Post.findByPk(postId, {
+    if (!slug) {
+      return res.status(400).json({
+        status: "error",
+        message: "El slug es requerido.",
+      });
+    }
+
+    const post = await Post.findOne({
+      where: {
+        slug,
+        courseId: null, // Solo publicaciones generales
+      },
       include: [
         {
           model: Reply,
           include: [
             {
-              model: User, // opcional: incluir el usuario que escribió la respuesta
-              attributes: ['name'] // o los campos que quieras exponer
+              model: User,
+              attributes: ['name']
             },
             {
-              model: Reply, // incluir respuestas anidadas
+              model: Reply,
               as: 'Replies',
               include: [{ model: User, attributes: ['name'] }],
             }
           ]
+        },
+        {
+          model: User,
+          attributes: ['id', 'name']
         }
       ]
     });
@@ -75,14 +91,23 @@ const getPostById = async (req, res) => {
 };
 
 
+
 // Crear una publicación
 const addPost = async (req, res) => {
   try {
     const { title, content } = req.body;
     const userId = req.user.id;
 
+    const slug = slugify(title);
+
+    const existing = await Post.findOne({ where: { slug, courseId: null } });
+    if (existing) {
+      return res.status(409).json({ message: "Ya existe una publicación con ese título." });
+    }
+
     const newPost = await Post.create({
       title,
+      slug,
       content,
       userId,
     });
@@ -99,6 +124,7 @@ const addPost = async (req, res) => {
     });
   }
 };
+
 
 // Editar una publicación
 const updatePost = async (req, res) => {
@@ -219,7 +245,7 @@ const addComment = async (req, res) => {
 
 module.exports = {
   getAllPosts,
-  getPostById,
+  getPostBySlug,
   addPost,
   updatePost,
   deletePost,
