@@ -21,7 +21,8 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://marion-client.vercel.app"
+  "https://marion-client.vercel.app",
+  "https://marion-client-main.vercel.app"
 ];
 
 app.use(morgan('dev'));
