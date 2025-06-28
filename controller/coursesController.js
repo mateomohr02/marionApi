@@ -26,34 +26,37 @@ const getUserCourses = async (req, res) => {
 };
 
 const getCourseByName = async (req, res) => {
-
-  console.log('arrives controller');
-  
-
   try {
-    // Ahora el parámetro "name" realmente es el slug
-    const courseSlug = req.query.name;    
+    const courseSlug = req.query.name;
 
     if (!courseSlug) {
-      return res
-        .status(400)
-        .json({ message: "El slug del curso es requerido" });
+      return res.status(400).json({
+        code: "BAD_REQUEST",
+        message: "El slug del curso es requerido"
+      });
     }
-    
+
     const course = await Course.findOne({
       where: { slug: courseSlug },
     });
 
     if (!course) {
-      return res.status(404).json({ message: "Curso no encontrado" });
+      return res.status(404).json({
+        code: "COURSE_NOT_FOUND",
+        message: "Curso no encontrado"
+      });
     }
 
     return res.status(200).json({ course });
+
   } catch (error) {
-    console.error("Error al obtener el curso:", error);
-    return res.status(500).json({ message: "Error interno del servidor" });
+    return res.status(500).json({
+      code: "SERVER_ERROR",
+      message: "Error interno del servidor"
+    });
   }
 };
+
 
 const getCourses = async (req, res) => {
   try {
