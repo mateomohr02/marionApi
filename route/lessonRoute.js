@@ -7,6 +7,7 @@ const {
     postLesson,
     deleteLesson,
     updateLesson,
+    getLessonbyId
   } = require("../controller/lessonController.js");
   
   const router = require("express").Router();
@@ -17,6 +18,8 @@ const {
   // Crear una nueva lección
   router.post("/", authentication, restrictTo("0"), postLesson);
   
+  router.get("/detail/:lessonId", authentication,restrictTo('0'), getLessonbyId);
+
   // Actualizar una lección
   router.put("/:lessonId", authentication, restrictTo("0"), updateLesson);
   

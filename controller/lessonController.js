@@ -38,7 +38,6 @@ const getCourseLessons = async (req, res) => {
   }
 };
 
-
 // Crear nueva lección con contenido en español y alemán
 const postLesson = async (req, res) => {
   const { courseId, title, content } = req.body;
@@ -46,7 +45,8 @@ const postLesson = async (req, res) => {
   // Validación mínima de estructura
   if (
     !courseId ||
-    !title?.es || !title?.de ||
+    !title?.es ||
+    !title?.de ||
     !Array.isArray(content?.es) ||
     !Array.isArray(content?.de)
   ) {
@@ -103,13 +103,39 @@ const deleteLesson = async (req, res) => {
   }
 };
 
+const getLessonbyId = async (req, res) => {
+  const { lessonId } = req.params;
+  try {
+    const lesson = await Lesson.findByPk(lessonId);
+    if (!lesson) {
+      return res.status(404).json({ message: "Lección no encontrada" });
+    }
+    res.status(200).json({
+      status: "success",
+      data: lesson,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      message: "Error al buscar la lección",
+    });
+  }
+};
+
 // Actualizar lección
 const updateLesson = async (req, res) => {
   const { lessonId } = req.params;
   const updates = req.body;
 
   try {
-    const [updated] = await Lesson.update(updates, { where: { id: lessonId } });
+    const oldLesson = await Lesson.findByPk(lessonId);
+    if (!oldLesson) {
+      return res.status(404).json({
+        status: "error",
+        message: "Lección no encontrada",
+      });
+    }
+    const updated = await oldLesson.update(updates);
 
     if (!updated) {
       return res.status(404).json({
@@ -118,13 +144,13 @@ const updateLesson = async (req, res) => {
       });
     }
 
-    const updatedLesson = await Lesson.findByPk(lessonId);
-
     res.status(200).json({
       status: "success",
-      data: updatedLesson,
+      data: updated,
     });
+
   } catch (error) {
+    
     console.error("Error al actualizar la lección:", error);
     res.status(500).json({
       status: "error",
@@ -138,4 +164,5 @@ module.exports = {
   postLesson,
   deleteLesson,
   updateLesson,
+  getLessonbyId,
 };
