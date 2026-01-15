@@ -46,7 +46,6 @@ router.post("/webhook", async (req, res) => {
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
-    console.error("⚠️  Webhook signature verification failed.", err.message);
     return res.sendStatus(400);
   }
 
@@ -55,26 +54,20 @@ router.post("/webhook", async (req, res) => {
     const session = event.data.object;
 
     const userId = session.metadata.userId;
-    const courseId = session.metadata.courseId;
-
-    console.log(userId, 'USERID WEBHOOK');
-    console.log(courseId, 'COURSEID WEBHOOK');
-    
+    const courseId = session.metadata.courseId;   
 
     try {
       const user = await User.findByPk(userId);
       const course = await Course.findByPk(courseId);
 
       if (!user || !course) {
-        console.error("❌ Usuario o curso no encontrados");
         return res.sendStatus(404);
       }
 
       await user.addCourse(course);
 
-      console.log(`✅ Curso (${courseId}) asignado al usuario (${userId})`);
     } catch (error) {
-      console.error("❌ Error asignando curso:", error);
+      
       return res.sendStatus(500);
     }
   } else {

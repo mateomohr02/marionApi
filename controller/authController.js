@@ -2,7 +2,11 @@ const db = require("../db/models");
 const { User: User } = db;
 const jwt = require("jsonwebtoken");
 const catchAsync = require("../utils/catchAsync");
+const transporter = require("../utils/transporter");
 const AppError = require("../utils/appError"); // Suponiendo que tienes un archivo de manejo de errores
+const emailBuilder = require("../utils/emailBuilder");
+const crypto = require("crypto");
+const { Op } = require("sequelize");
 
 const generateToken = (payload) => {
   return jwt.sign(payload, process.env.JWT_SECRET_KEY, {
@@ -139,4 +143,137 @@ const restrictTo = (...userType) => {
   };
 };
 
-module.exports = { signUp, login, authentication, restrictTo };
+const sendRecoveryEmail = catchAsync(async (req, res, next) => {
+  const { email, lang = 'es' } = req.body;
+  const user = await User.findOne({ where: { email } });
+
+  if (!user) {
+    return next(new AppError("There is no user with that email address.", 404));
+  }
+
+  //LÓGICA PARA GENERAR UN TOKEN
+
+  const recoveryToken = crypto.randomBytes(32).toString("hex");
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(recoveryToken)
+    .digest("hex");
+
+  //Guardar el hashedToken en la base de datos con fecha de expiración
+  user.passwordResetToken = hashedToken;
+  user.passwordResetExpires = Date.now() + 15 * 60 * 1000; // 15 minutos
+  await user.save();
+
+  const recoveryUrl = `${process.env.CLIENT_URL_DEV}/recovery/${recoveryToken}`;
+  //LÓGICA PARA ENVIAR EL MAIL
+
+  const emailbody = lang === 'es' ?
+  `
+    <h2>Recuperación de contraseña</h2>
+    <a href="${recoveryUrl}" 
+       style="
+        display: inline-block;
+        margin-top: 20px;
+        padding: 12px 24px;
+        background-color: #ff6b6b;
+        color: #ffffff;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: bold;
+       ">
+       Restablecer contraseña
+    </a>
+    <p style="margin-top: 20px; font-size: 12px;">
+      Este enlace expira en 15 minutos.
+    </p>
+  ` : lang === 'de' ?
+  `
+    <h2>Passwort-Wiederherstellung</h2>
+    <a href="${recoveryUrl}" 
+       style="
+        display: inline-block;
+        margin-top: 20px;
+        padding: 12px 24px;
+        background-color: #ff6b6b;
+        color: #ffffff;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: bold;
+       ">
+       Passwort zurücksetzen
+    </a>
+    <p style="margin-top: 20px; font-size: 12px;">
+      Dieser Link läuft innerhalb von 15 Minuten ab.
+    </p>
+  ` : `
+    <h2>Recuperación de contraseña</h2>
+    <a href="${recoveryUrl}" 
+       style="
+        display: inline-block;
+        margin-top: 20px;
+        padding: 12px 24px;
+        background-color: #ff6b6b;
+        color: #ffffff;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: bold;
+       ">
+       Restablecer contraseña
+    </a>
+    <p style="margin-top: 20px; font-size: 12px;">
+      Este enlace expira en 15 minutos.
+    </p>
+  `;
+  
+  await transporter.sendMail(emailBuilder(
+    process.env.GOOGLE_APP_EMAIL,
+    user.email,
+    lang === 'es' ? 'Recuperación de contraseña' : lang === 'de' ? 'Passwort-Wiederherstellung' : 'Recuperación de contraseña',
+    emailbody,
+    lang
+  ));  
+
+  return res.status(200).json({
+    status: "success",
+    message: "Recovery email sent successfully.",
+  });
+
+});
+
+const recoveryPassword = catchAsync(async (req, res, next) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  if (!token || !password) {
+    return next(new AppError("Token and password are required.", 400));
+  }
+
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+
+  const user = await User.findOne({
+    where: {
+      passwordResetToken: hashedToken,
+      passwordResetExpires: { [Op.gt]: Date.now() },
+    },
+  });
+
+  if (!user) {
+    return next(new AppError("Token is invalid or has expired.", 400));
+  }
+
+  user.password = password;
+  user.passwordResetToken = null;
+  user.passwordResetExpires = null;
+  await user.save();
+
+  return res.status(200).json({
+    status: "success",
+    message: "Recovery email sent successfully.",
+  });
+
+});
+
+module.exports = { signUp, login, authentication, restrictTo, sendRecoveryEmail, recoveryPassword };
