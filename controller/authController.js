@@ -15,7 +15,7 @@ const generateToken = (payload) => {
 };
 
 const signUp = async (req, res, next) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, lang = "es" } = req.body;
 
   try {
     // 1. Validación básica
@@ -46,13 +46,100 @@ const signUp = async (req, res, next) => {
 
     // 4. Crear usuario
     const newUser = await User.create({ name, email, password });
+
+    const emailbody =
+      lang === "de"
+        ? `
+
+        <h1 style="margin-top:0;font-size:26px;">
+  Willkommen auf der Plattform von Partera Marion!
+</h1>
+
+<p style="font-size:16px;line-height:1.6;">
+  Vielen Dank für Ihre Registrierung bei <strong>Partera Marion</strong>, einem Raum,
+  der geschaffen wurde, um Sie <strong>vor, während und nach der Geburt</strong>
+  zu begleiten.
+</p>
+
+<p style="font-size:16px;line-height:1.6;">
+  Ab sofort haben Sie Zugang zu unseren <strong>kostenlosen Kursen</strong>,
+  die Ihnen einen Einblick in unseren Ansatz und die Qualität unserer Inhalte geben.
+</p>
+
+<p style="font-size:16px;line-height:1.6;">
+  Wenn Sie möchten, können Sie jederzeit auf alle Inhalte zugreifen,
+  indem Sie einen unserer Kurse erwerben.
+</p>
+
+<a href="${process.env.CLIENT_URL_DEV}/courses" style="
+  display:inline-block;
+  margin-top:25px;
+  padding:14px 28px;
+  background-color:#ff6b6b;
+  color:#ffffff;
+  text-decoration:none;
+  border-radius:6px;
+  font-weight:bold;
+  font-size:15px;
+">
+  Verfügbare Kurse ansehen
+</a>
+
+
+    `
+        : `
+    <h1 style="margin-top:0;font-size:26px;">
+  ¡Bienvenida a la plataforma de Partera Marion!
+</h1>
+
+<p style="font-size:16px;line-height:1.6;">
+  Gracias por registrarte en <strong>Partera Marion</strong>, un espacio creado para
+  acompañarte <strong>antes, durante y después del parto</strong>.
+</p>
+
+<p style="font-size:16px;line-height:1.6;">
+  Desde ahora tenés acceso a nuestras <strong>clases gratuitas</strong>, pensadas
+  para que conozcas el enfoque y la calidad de nuestros contenidos.
+</p>
+
+<p style="font-size:16px;line-height:1.6;">
+  Cuando lo desees, podés acceder al contenido completo adquiriendo cualquiera
+  de nuestros cursos.
+</p>
+
+<a href="${process.env.CLIENT_URL_DEV}/courses" style="
+  display:inline-block;
+  margin-top:25px;
+  padding:14px 28px;
+  background-color:#ff6b6b;
+  color:#ffffff;
+  text-decoration:none;
+  border-radius:6px;
+  font-weight:bold;
+  font-size:15px;
+">
+  Ver los cursos disponibles
+</a>
     
+    `;
+
+    await transporter.sendMail(
+      emailBuilder(
+        process.env.GOOGLE_APP_EMAIL,
+        newUser.email,
+        lang === "de"
+          ? "Willkommen bei Hebamme Marion"
+          : "¡Bienvenida a Partera Marion!",
+        emailbody,
+        lang
+      )
+    );
+
     // 6. Respuesta exitosa
     return res.status(201).json({
       status: "success",
       message: "User registered successfully.",
     });
-
   } catch (error) {
     return next(error); // delega al middleware de errores global
   }
@@ -144,7 +231,7 @@ const restrictTo = (...userType) => {
 };
 
 const sendRecoveryEmail = catchAsync(async (req, res, next) => {
-  const { email, lang = 'es' } = req.body;
+  const { email, lang = "es" } = req.body;
   const user = await User.findOne({ where: { email } });
 
   if (!user) {
@@ -167,8 +254,9 @@ const sendRecoveryEmail = catchAsync(async (req, res, next) => {
   const recoveryUrl = `${process.env.CLIENT_URL_DEV}/recovery/${recoveryToken}`;
   //LÓGICA PARA ENVIAR EL MAIL
 
-  const emailbody = lang === 'es' ?
-  `
+  const emailbody =
+    lang === "es"
+      ? `
     <h2>Recuperación de contraseña</h2>
     <a href="${recoveryUrl}" 
        style="
@@ -186,8 +274,9 @@ const sendRecoveryEmail = catchAsync(async (req, res, next) => {
     <p style="margin-top: 20px; font-size: 12px;">
       Este enlace expira en 15 minutos.
     </p>
-  ` : lang === 'de' ?
   `
+      : lang === "de"
+      ? `
     <h2>Passwort-Wiederherstellung</h2>
     <a href="${recoveryUrl}" 
        style="
@@ -205,7 +294,8 @@ const sendRecoveryEmail = catchAsync(async (req, res, next) => {
     <p style="margin-top: 20px; font-size: 12px;">
       Dieser Link läuft innerhalb von 15 Minuten ab.
     </p>
-  ` : `
+  `
+      : `
     <h2>Recuperación de contraseña</h2>
     <a href="${recoveryUrl}" 
        style="
@@ -224,20 +314,25 @@ const sendRecoveryEmail = catchAsync(async (req, res, next) => {
       Este enlace expira en 15 minutos.
     </p>
   `;
-  
-  await transporter.sendMail(emailBuilder(
-    process.env.GOOGLE_APP_EMAIL,
-    user.email,
-    lang === 'es' ? 'Recuperación de contraseña' : lang === 'de' ? 'Passwort-Wiederherstellung' : 'Recuperación de contraseña',
-    emailbody,
-    lang
-  ));  
+
+  await transporter.sendMail(
+    emailBuilder(
+      process.env.GOOGLE_APP_EMAIL,
+      user.email,
+      lang === "es"
+        ? "Recuperación de contraseña"
+        : lang === "de"
+        ? "Passwort-Wiederherstellung"
+        : "Recuperación de contraseña",
+      emailbody,
+      lang
+    )
+  );
 
   return res.status(200).json({
     status: "success",
     message: "Recovery email sent successfully.",
   });
-
 });
 
 const recoveryPassword = catchAsync(async (req, res, next) => {
@@ -248,10 +343,7 @@ const recoveryPassword = catchAsync(async (req, res, next) => {
     return next(new AppError("Token and password are required.", 400));
   }
 
-  const hashedToken = crypto
-    .createHash("sha256")
-    .update(token)
-    .digest("hex");
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
   const user = await User.findOne({
     where: {
@@ -273,7 +365,13 @@ const recoveryPassword = catchAsync(async (req, res, next) => {
     status: "success",
     message: "Recovery email sent successfully.",
   });
-
 });
 
-module.exports = { signUp, login, authentication, restrictTo, sendRecoveryEmail, recoveryPassword };
+module.exports = {
+  signUp,
+  login,
+  authentication,
+  restrictTo,
+  sendRecoveryEmail,
+  recoveryPassword,
+};
